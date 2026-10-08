@@ -1,0 +1,16 @@
+const {fetchSheet,objects,nameOf,norm,json,responseUrl}=require('./_shared');
+const KEYS={1:['lifeline','samurai','hammer','face','pound','watched','helped','photo','happiest','fed','hunger','children','childhood','click','exposed','story'],2:['brand','logo','stall','booth','fest','identity','colour','color','tagline','customer','layout','visual','problem','solution','audience']};
+const STYLE=['cinematic','lighting','realistic','detailed','dramatic','close-up','wide','4k','shadow','texture','mood','background','foreground','colour','color','angle'];
+const EMO=['emotion','tears','alone','lonely','pain','hope','fear','silence','crowd','struggle','sacrifice','hunger','innocent','broken','dark','light'];
+const BR=[['name'],['tagline'],['product','service'],['problem'],['solution'],['audience','target'],['unique','usp','differen'],['concept','story'],['stall','fest','booth'],['identity','colour','color','design','tone']];
+const CR={1:[['Prompt',30],['Accuracy',40],['Creativity',30]],2:[['Brand Idea',25],['Identity & Document',20],['Stall Visualization',30],['Stall Accuracy',25]]};
+const words=t=>(t.match(/[a-z']+/g)||[]), clamp=x=>Math.max(0,Math.min(1,x));
+function textOf(o){return Object.entries(o).filter(([k,v])=>!/name|mail|time|phone|college|year|dept|roll|reg/.test(k)&&!/^https?:/i.test(v)).map(x=>x[1]).join(' ').toLowerCase();}
+function model1(o){const t=textOf(o),w=words(t),n=w.length,len=n<8?n/8:n>150?.7:1,sty=clamp(STYLE.filter(k=>t.includes(k)).length/5),topic=clamp(KEYS[1].filter(k=>t.includes(k)).length/3),emo=clamp(EMO.filter(k=>t.includes(k)).length/4),div=n?new Set(w).size/n:0;return [Math.round(30*clamp(.5*len+.5*sty)),Math.round(40*clamp(.7*topic+.3*len)),Math.round(30*clamp(.4*emo+.3*div+.3*sty))];}
+function model2(o){const t=textOf(o),n=words(t).length,cov=BR.filter(g=>g.some(k=>t.includes(k))).length/BR.length,has=re=>clamp((t.match(re)||[]).length/3),img=Object.values(o).some(v=>/^https?:/i.test(v))?1:0,depth=clamp(Math.log2(1+n)/8);return [Math.round(25*clamp(.5*cov+.3*depth+.2*has(/tagline|unique|usp|story/g))),Math.round(20*clamp(.6*cov+.4*has(/colou?r|identity|tone|design/g))),Math.round(30*clamp(.4*has(/stall|booth|fest|layout|visual/g)+.3*img+.3*depth)),Math.round(25*clamp(.5*cov+.3*has(/stall|fest/g)+.2*img))];}
+function score(o,n){const m=n===1?model1(o):model2(o);return CR[n].map(([c,mx],i)=>{const col=Object.keys(o).find(k=>k.startsWith(c.toLowerCase().split(/[ &]/)[0])),v=col?parseFloat(o[col]):NaN;return Number.isFinite(v)?Math.min(mx,Math.max(0,v)):m[i];});}
+module.exports=async(req,res)=>{
+ if(req.method!=='GET') return json(res,405,{ok:false,error:'GET required'});
+ const n=Number(req.query?.round); if(![1,2].includes(n)) return json(res,400,{ok:false,error:'round must be 1 or 2'});
+ try{const rows=objects(await fetchSheet(responseUrl(n))), map=new Map();for(const o of rows){const name=nameOf(o);if(name)map.set(norm(name),{name,m:score(o,n)});}const result=[...map.values()].map(x=>({...x,total:x.m.reduce((a,b)=>a+b,0)}));return json(res,200,{ok:true,round:n,count:result.length,criteria:CR[n],rows:result,updatedAt:new Date().toISOString(),model:'deterministic-evaluator-v1'});}catch(e){return json(res,502,{ok:false,error:e.message});}
+};

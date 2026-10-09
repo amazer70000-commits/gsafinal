@@ -1,260 +1,152 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="theme-color" content="#f4ecd8" id="tc">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>STARC-UP — Event</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STARC-UP // JARVIS · Round 1 & Round 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700;800&display=swap" rel="stylesheet"><!-- optional: works offline with fallback fonts -->
+<!--
+  STARC-UP LITE (JARVIS theme) - no login, no admin. Double-click index.html. Keep the .mp4/.mp3 files in the same folder
+  (all media is optional: a missing file is simply skipped).
+  CODE MAP (for troubleshooting):
+   1 CSS ........ :root = dark (arc-reactor green) / [data-theme=light] = gold + red | HUD grid | arc-reactor timer | transition
+   2 HTML ....... #bgv videos | #hud top bar | #cut (transition) | #home | #r1 | #r2 | #demo
+   3 DATA ....... TOPICS, BRAND, PROMPT_LINE, FEEDBACK, VOICE (jarvis audio files)
+   4 say() ...... plays a JARVIS voice file (silent if the file is missing or Voice is OFF)
+   5 go(page) ... cinematic change: letterbox bars close -> reactor pulse -> "ACCESS GRANTED" title -> bars open
+   6 Timer ...... arc-reactor ring timer, one per round
+   7 Demo ....... 3-step submission demonstration
+-->
 <style>
-:root{--bg:#f4ecd8;--text:#1c1409;--red:#c8102e;--acc:#b8860b;--acc-rgb:184,134,11;--panel:rgba(255,251,240,.82);--scrim:rgba(244,236,216,.5);--vid:244,236,216;--mix:color-mix(in srgb,rgb(var(--vid)) 30%,var(--bg));--nav:rgba(244,236,216,.88);--on:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
-:root[data-theme="dark"]{--bg:#04090a;--text:#e6f4ec;--red:#e10600;--acc:#22e07a;--acc-rgb:34,224,122;--panel:rgba(6,16,12,.74);--scrim:rgba(0,6,4,.35);--vid:4,9,10;--nav:rgba(4,9,10,.85);--on:#02140a;color-scheme:dark}
-html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:17px;line-height:1.6;overflow-x:hidden}
-h1,h2,h3,.btn{font-family:'Sora','Inter',Arial,sans-serif}
-#bg{position:fixed;inset:0;z-index:-2;background:var(--bg)}
-#bg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
-#bg video.on{display:block}
-#bg::after{content:"";position:absolute;inset:0;background:var(--scrim);background:radial-gradient(ellipse at center,color-mix(in srgb,var(--mix) 38%,transparent),color-mix(in srgb,var(--mix) 74%,transparent))}
-#bgfx{position:fixed;inset:0;z-index:-1;pointer-events:none;background:
- repeating-linear-gradient(0deg,rgba(var(--acc-rgb),.08) 0 1px,transparent 1px 40px),
- repeating-linear-gradient(90deg,rgba(200,16,46,.08) 0 1px,transparent 1px 40px),
- radial-gradient(circle at 50% 30%,rgba(225,6,0,.18),transparent 60%);animation:grid 8s linear infinite}
-@keyframes grid{to{background-position:0 40px,40px 0,0 0}}
-nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:12px 4vw;padding-top:calc(12px + env(safe-area-inset-top,0px));background:var(--nav);background:color-mix(in srgb,var(--mix) 86%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid rgba(var(--acc-rgb),.3)}
-nav .r{display:flex;gap:10px}
-.btn{--c:var(--acc);cursor:pointer;background:transparent;color:var(--c);border:1.5px solid var(--c);border-radius:8px;padding:10px 18px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;transition:.25s}
+:root{--bg:#f4ecd8;--text:#1c1409;--red:#c8102e;--acc:#b8860b;--acc-rgb:184,134,11;--panel:rgba(255,251,240,.82);--scrim:rgba(244,236,216,.55);--on:#fff;--sora:'Sora','Inter',Arial,sans-serif}
+:root[data-theme=dark]{--bg:#04090a;--text:#e6f4ec;--red:#e10600;--acc:#22e07a;--acc-rgb:34,224,122;--panel:rgba(6,16,12,.74);--scrim:rgba(0,6,4,.45);--on:#02140a}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font:17px/1.6 'Inter',system-ui,sans-serif;overflow-x:hidden;transition:background .6s}
+#bgv{position:fixed;inset:0;z-index:-3;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-touch-callout:none}
+#bgv::-webkit-media-controls{display:none!important}
+body::before{content:"";position:fixed;inset:0;z-index:-2;background:linear-gradient(var(--scrim),var(--scrim)),repeating-linear-gradient(0deg,rgba(var(--acc-rgb),.08) 0 1px,transparent 1px 40px),repeating-linear-gradient(90deg,rgba(var(--acc-rgb),.08) 0 1px,transparent 1px 40px)}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(transparent 50%,rgba(var(--acc-rgb),.04) 50%) 0 0/100% 4px}
+h1,h2,h3,.btn,.tag{font-family:var(--sora)}
+.tag{color:var(--acc);font-weight:600;font-size:12px;letter-spacing:.25em;text-transform:uppercase}
+h1{font-size:clamp(46px,10vw,120px);line-height:1;font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(34px,6vw,70px);line-height:1.05;font-weight:800;color:var(--acc);margin:8px 0 14px}
+h1 em,h2 em{font-style:normal;color:var(--red)}
+#hud{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;justify-content:space-between;align-items:center;padding:12px 4vw;font:600 11px var(--sora);letter-spacing:.2em;color:var(--acc);background:linear-gradient(var(--bg),transparent)}
+#hud i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc);margin-right:8px;animation:pl 1.6s infinite}@keyframes pl{50%{opacity:.3}}
+#hud div{display:flex;gap:8px}
+.btn{--c:var(--acc);cursor:pointer;background:transparent;color:var(--c);border:1.5px solid var(--c);border-radius:8px;padding:10px 18px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;display:inline-block;transition:.25s}
 .btn:hover{background:var(--c);color:var(--on);box-shadow:0 0 16px rgba(var(--acc-rgb),.5)}
-.btn:active{transform:scale(.95)}
-.btn.red{--c:var(--red);color:#fff;background:var(--red)}
-.btn.red:hover{filter:brightness(1.15);color:#fff;box-shadow:0 0 18px var(--red)}
-.btn.big{padding:15px 34px;font-size:14px}
-.hero{position:relative;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:120px 6vw 60px}
-
-/* ===== TITLE: STARC-UP (plain text) ===== */
-.hero h1{font-size:clamp(40px,10vw,116px);margin:0;font-weight:700;letter-spacing:.04em;color:var(--text);display:flex;flex-wrap:wrap;justify-content:center}
-.ltr{display:inline-block;opacity:0}
-.go .ltr{animation:assemble 1s cubic-bezier(.2,.9,.2,1) forwards;animation-delay:calc(var(--i)*.08s)}
-@keyframes assemble{from{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r)) scale(3);filter:blur(16px)}60%{opacity:1}to{opacity:1;transform:none;filter:none}}
-
-.hero>*{position:relative;z-index:1}
-.hero>.art{position:absolute;z-index:0;left:50%;top:50%;width:min(94vw,80vh,700px);aspect-ratio:1;transform:translate(-50%,-52%);opacity:.85;pointer-events:none;transition:opacity .7s}
-.hero>img.art{object-fit:contain;aspect-ratio:auto;height:min(94vw,80vh,700px)}
-.hero>.art-dark{display:none}
-[data-theme="dark"] .hero>.art-dark{display:block}
-[data-theme="dark"] .hero>.art-light{display:none}
-.art .spin{transform-box:fill-box;transform-origin:center;animation:spin 24s linear infinite}
-.art .spin.r{animation-direction:reverse;animation-duration:16s}
-.art .spin.slow{animation-duration:60s}
-.art .flow{animation:flow 7s linear infinite}
-.art .tw{animation:pulse 3s infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes flow{to{stroke-dashoffset:-240}}
-.wave{position:fixed;left:50%;top:50%;width:80px;height:80px;margin:-40px;border:3px solid var(--acc);border-radius:50%;z-index:150;pointer-events:none;opacity:0}
-.wave.go{animation:wave 1.3s ease-out}
-@keyframes wave{from{opacity:1;transform:scale(0);box-shadow:0 0 40px var(--acc)}to{opacity:0;transform:scale(36)}}
-.hero p{max-width:620px;opacity:.88;margin:14px 0 30px}
-.hint{margin-top:50px;color:var(--acc);font-size:12px;font-weight:600;letter-spacing:.25em;animation:pulse 2s infinite}
-@keyframes pulse{50%{opacity:.3}}
-section.c{max-width:1000px;margin:0 auto;padding:60px 6vw}
-.tag{color:var(--acc);font-family:'Sora';font-weight:600;font-size:12px;letter-spacing:.25em}
-.card{background:var(--panel);background:color-mix(in srgb,var(--mix) 80%,transparent);backdrop-filter:blur(8px);border:1px solid rgba(var(--acc-rgb),.4);border-radius:16px;padding:30px;margin:0 0 40px;transition:.3s}
-.card:hover{border-color:var(--red);box-shadow:0 8px 30px rgba(225,6,0,.3);transform:translateY(-4px)}
-.card h2{margin:6px 0 10px;font-size:clamp(22px,4vw,32px);color:var(--acc)}
-.hintbox{margin-top:16px;padding:12px 16px;border-left:3px solid var(--red);background:rgba(0,0,0,.12);border-radius:0 8px 8px 0;font-weight:500}
-.hintbox b{color:var(--red)}
-.logos{display:flex;gap:30px;justify-content:center;flex-wrap:wrap}
-.logo-slot{width:130px;height:130px;border:1px dashed var(--acc);display:grid;place-items:center;font-size:12px;color:var(--acc);border-radius:16px;overflow:hidden}
-.logo-slot img{width:100%;height:100%;object-fit:cover}
-.quote{text-align:center;padding:80px 6vw 60px}
-.quote blockquote{margin:0 auto;max-width:760px;font-family:'Sora';font-weight:600;font-size:clamp(20px,3.5vw,30px);color:var(--acc);line-height:1.5}
-.quote cite{display:block;margin-top:14px;color:var(--red);font-weight:600;letter-spacing:.2em;font-style:normal}
-footer{text-align:center;padding:30px;font-size:13px;opacity:.65}
-.rv{opacity:0;transform:translateY(40px);filter:blur(5px);transition:1s cubic-bezier(.2,.8,.2,1)}
-.rv.in{opacity:1;transform:none;filter:none}
-#intro{position:fixed;inset:0;z-index:100;background:#000;display:flex;align-items:center;justify-content:center}
-#intro video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-#intro .gate{position:relative;text-align:center}
-#intro .gate p{color:var(--acc);letter-spacing:.3em;font-size:12px;margin-bottom:16px}
-#skip{position:absolute;right:4vw;bottom:calc(4vh + env(safe-area-inset-bottom,0px));z-index:2}
-#formslot{margin:20px 0;padding:16px;border:1px dashed var(--acc);border-radius:10px;color:var(--acc);max-width:520px}
-@media(max-width:560px){.btn{padding:8px 10px;font-size:10px}nav .r{gap:6px}}
-
-html{-webkit-text-size-adjust:100%}
-body{font-size:clamp(16px,.5vw + 14px,20px)}
-nav{padding-left:max(4vw,env(safe-area-inset-left,0px));padding-right:max(4vw,env(safe-area-inset-right,0px))}
-.btn{min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
-.btn .ic{font-size:15px;line-height:1}
-.btn.off{opacity:.6}.btn.off .ic{text-decoration:line-through}
-.hero p,.hero .tag,.hint,.quote blockquote,.quote cite,.quote p{text-shadow:0 1px 14px var(--mix)}
-@media(min-width:1500px){section.c{max-width:1240px}.hero h1{font-size:clamp(100px,8vw,170px)}.card{padding:40px}}
-@media(max-width:700px){.card{padding:22px 18px;border-radius:14px}.hero{padding:100px 5vw 40px}.btn .lbl{display:none}.btn{padding:8px 12px}.logos{gap:16px}.logo-slot{width:96px;height:96px}.quote{padding:50px 5vw 40px}section.c{padding:36px 5vw}}
-@media(max-height:480px) and (orientation:landscape){.hero{min-height:auto;padding:90px 6vw 40px}.hero h1{font-size:clamp(36px,12vh,80px)}.hint{display:none}}
-@media(hover:none){.card:hover{transform:none;box-shadow:none}.btn:hover{background:transparent;color:var(--c);box-shadow:none}.btn.red:hover{background:var(--red);color:#fff;filter:none;box-shadow:none}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important}.ltr{opacity:1}}
-
-/* ----- JARVIS caption bar ----- */
-#jarvis{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);z-index:60;width:max-content;max-width:min(680px,92vw);padding:12px 18px;border:1px solid rgba(var(--acc-rgb),.5);border-radius:12px;background:var(--panel);background:color-mix(in srgb,var(--mix) 88%,transparent);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;font-size:15px;line-height:1.45}
-#jarvis.show{opacity:1;transform:translate(-50%,0)}
-#jarvis b{display:block;color:var(--acc);font-family:'Sora';font-size:11px;font-weight:600;letter-spacing:.2em;margin-bottom:2px}
-#jarvis b::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:8px;animation:pulse 1s infinite}
-
-/* ----- SNAP support -----
-   .snapping : hides the big hero artwork softly while the dust flies
-   .snapcap  : only applied inside the html2canvas clone so gradient-text, blurs and
-               colour-mix() (which html2canvas can't read) are drawn with plain colours */
-.snapping .hero>.art{opacity:0!important}
-.snapcap *{transition:none!important;animation:none!important;text-shadow:none!important}
-.snapcap .card{background:var(--panel)!important;backdrop-filter:none!important}
+.btn.red{--c:var(--red);background:var(--red);color:#fff}.btn.red:hover{filter:brightness(1.15);color:#fff;box-shadow:0 0 18px var(--red)}
+.page{display:none;min-height:100vh;padding:11vh 6vw 10vh;max-width:1100px;margin:auto}
+.page.on{display:block;animation:in 1.1s cubic-bezier(.2,.7,.1,1) both}
+@keyframes in{from{opacity:0;transform:scale(1.07);filter:blur(10px) brightness(2)}to{opacity:1;transform:none;filter:none}}
+#home.on{display:flex;flex-direction:column;justify-content:center}
+.sub{margin:18px 0 6vh;color:var(--acc);letter-spacing:.2em;font:600 13px var(--sora);text-transform:uppercase}
+.pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.card{position:relative;background:var(--panel);backdrop-filter:blur(8px);border:1px solid rgba(var(--acc-rgb),.4);border-radius:16px;padding:30px;transition:.3s}
+.card::before,.card::after{content:"";position:absolute;width:16px;height:16px;border:2px solid var(--acc);transition:.3s}
+.card::before{top:-1px;left:-1px;border-right:0;border-bottom:0;border-radius:16px 0 0 0}.card::after{bottom:-1px;right:-1px;border-left:0;border-top:0;border-radius:0 0 16px 0}
+.pick .card{cursor:pointer}.pick .card:hover,.topics li:hover{border-color:var(--red);box-shadow:0 8px 30px rgba(225,6,0,.3);transform:translateY(-4px)}
+.card b{display:block;font:800 30px var(--sora);color:var(--acc);margin:6px 0}
+.note{max-width:700px;margin:8px 0}
+.hintbox{margin:16px 0;padding:12px 16px;border-left:3px solid var(--red);background:rgba(0,0,0,.14);border-radius:0 8px 8px 0;font-weight:500;max-width:700px}.hintbox b{color:var(--red)}
+.topics{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:4vh 0;counter-reset:t}
+.topics li{counter-increment:t;position:relative;background:var(--panel);border:1px solid rgba(var(--acc-rgb),.4);border-radius:12px;padding:20px 20px 20px 70px;font:700 18px/1.3 var(--sora);transition:.3s}
+.topics li::before{content:counter(t,decimal-leading-zero);position:absolute;left:18px;top:50%;transform:translateY(-50%);font:800 26px var(--sora);color:var(--red)}
+.timer{margin:5vh auto;text-align:center}
+.ring{position:relative;width:min(340px,80vw);margin:20px auto}
+.ring svg{width:100%;transform:rotate(-90deg);filter:drop-shadow(0 0 12px rgba(var(--acc-rgb),.7))}
+.ring circle{fill:none;stroke-width:6}.ring .bg{stroke:rgba(var(--acc-rgb),.2)}.ring .fg{stroke:var(--acc);stroke-linecap:round;stroke-dasharray:553;transition:stroke-dashoffset 1s linear,stroke .4s}
+.ring .core{position:absolute;inset:0;display:grid;place-items:center;font:800 clamp(44px,12vw,72px) var(--sora);font-variant-numeric:tabular-nums}
+.ring.low .fg{stroke:var(--red)}.ring.low .core{color:var(--red);animation:pl 1s infinite}
+.ctl{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center}
+.ctl input{width:90px;background:var(--panel);border:1.5px solid var(--acc);color:var(--text);border-radius:8px;font:700 14px var(--sora);padding:10px;text-align:center}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin:3vh 0}
+.step{margin:4vh 0;animation:in .8s both}.step h3{font-size:clamp(26px,4.5vw,44px);color:var(--acc);margin:8px 0 12px}
+.step ol{padding-left:24px;max-width:700px}.step li{margin:6px 0}.step small{opacity:.7}
+.code{display:block;margin:16px 0;padding:18px;border:1px dashed var(--acc);border-radius:10px;font:500 15px/1.6 ui-monospace,Menlo,Consolas,monospace;word-break:break-word;max-width:700px}
+.dots{display:flex;gap:8px;margin-top:3vh}.dots i{width:40px;height:4px;border-radius:2px;background:rgba(var(--acc-rgb),.25)}.dots i.on{background:var(--acc);box-shadow:0 0 8px var(--acc)}
+/* transition: bars + reactor pulse + title */
+#cut{position:fixed;inset:0;z-index:100;pointer-events:none;display:grid;place-items:center}
+#cut .bar{position:absolute;left:0;right:0;height:50.5%;background:#020807;transition:transform .8s cubic-bezier(.7,0,.2,1)}
+#cut .t{top:0;transform:translateY(-100%)}#cut .b{bottom:0;transform:translateY(100%)}
+#cut.shut .bar{transform:none}
+#cut .rg{position:absolute;width:90px;height:90px;border:3px solid var(--acc);border-radius:50%;opacity:0}
+#cut.shut .rg{animation:rg 1.6s .5s ease-out}@keyframes rg{from{opacity:1;transform:scale(0);box-shadow:0 0 40px var(--acc)}to{opacity:0;transform:scale(14)}}
+#cut .tt{position:relative;text-align:center;color:#e6f4ec;opacity:0;letter-spacing:.2em;transition:opacity .5s,letter-spacing 1.8s}
+#cut.shut .tt{opacity:1;letter-spacing:.38em}
+#cut .tt small{display:block;font:600 12px var(--sora);color:var(--acc);margin-bottom:12px;letter-spacing:.4em}#cut .tt div{font:800 clamp(26px,6vw,60px) var(--sora)}
+@media(hover:none){.btn:hover{background:transparent;color:var(--c);box-shadow:none}.btn.red:hover{background:var(--red);color:#fff}}
 </style>
 </head>
 <body>
-<!-- CODE MAP: #intro (video 1) | #bg (muted bg videos) | nav (voice/music/theme/login buttons) | hero | rounds cards | JARVIS VOICE (VOICE table) | THEME snap | portal.js = login, rounds, admin -->
+<video id="bgv" muted loop autoplay playsinline disablepictureinpicture disableremoteplayback tabindex="-1" src="bg-dark.mp4"></video>
+<div id="hud"><span><i></i>JARVIS // SYSTEM ONLINE</span><div><button class="btn" id="ttog">Theme</button></div></div>
+<div id="cut"><div class="bar t"></div><div class="bar b"></div><div class="rg"></div><div class="tt"><small id="cutL"></small><div id="cutT"></div></div></div>
 
-<!-- VIDEO 1: INTRO (plays WITH sound) -->
-<div id="intro">
-  <video id="v1" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" x-webkit-airplay="deny" tabindex="-1" playsinline src="intro.mp4"></video><!-- TODO: Video 1 path/URL -->
-  <div class="gate" id="gate">
-    <p>// SYSTEM STANDBY</p>
-    <button class="btn big red" id="enter">Initialize</button>
+<section id="home" class="page on">
+  <span class="tag">// Cybrosis × Starc-Up</span>
+  <h1>STARC-<em>UP</em></h1>
+  <p class="sub">Two rounds. One inevitable outcome.</p>
+  <div class="pick">
+    <div class="card pk" data-go="r1"><span class="tag">Round 01</span><b>UNLOCK 17-A</b>Create an image with AI. Look closer.</div>
+    <div class="card pk" data-go="r2"><span class="tag">Round 02</span><b>THE INEVITABLE</b>Turn a startup into an image. Convince the room.</div>
   </div>
-  <button class="btn" id="skip" style="display:none">Skip ▸</button>
-</div>
+</section>
 
-<!-- BACKGROUND VIDEOS (muted loop): v2 = LIGHT mode, v3 = DARK mode -->
-<div id="bg">
-  <video id="v2" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" x-webkit-airplay="deny" tabindex="-1" muted loop playsinline src="bg-light.mp4"></video><!-- TODO: LIGHT mode background video -->
-  <video id="v3" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" x-webkit-airplay="deny" tabindex="-1" muted loop playsinline src="bg-dark.mp4"></video><!-- TODO: DARK mode background video -->
-</div>
-<div id="bgfx"></div><!-- fallback animation, auto-hides when the active theme's video has a src -->
-<div class="wave" id="wave"></div>
-<div id="jarvis" role="status" aria-live="polite"><b>J.A.R.V.I.S.</b><span id="jt"></span></div>
+<section id="r1" class="page">
+  <button class="btn" data-go="home">&larr; Home</button><br><br>
+  <span class="tag">Round 01 // Access protocol</span>
+  <h2>UNLOCK <em>17-A</em></h2>
+  <p class="note">Create an image with artificial intelligence. Choose <b>ONE</b> topic, write <b>ONE</b> precise prompt, generate your image and keep the exact prompt.</p>
+  <div class="hintbox"><b>Marks:</b> Prompt 30 · Accuracy 40 · Creativity 30</div>
+  <span class="tag">Mission files — choose one</span>
+  <ol class="topics" id="topics"></ol>
+  <div class="card timer" data-timer="30"><span class="tag">Time remaining</span></div>
+  <div class="row"><a class="btn red" href="https://forms.gle/MEhdtkk1YX2hZ71TA" target="_blank" rel="noopener">Open submission form</a>
+  <a class="btn" href="https://producttrialsurvey.geministudentambassador.com/" target="_blank" rel="noopener">Pre-survey</a></div>
+</section>
 
-<nav>
-  <div class="r">
-    <button class="btn" id="voice" aria-label="Toggle voice assistant"><span class="ic">◉</span><span class="lbl"> Voice: On</span></button>
-    <button class="btn" id="music" aria-label="Toggle music"><span class="ic">♪</span><span class="lbl"> Music: On</span></button>
-    <button class="btn" id="theme" aria-label="Toggle light/dark mode"><span class="ic">☾</span><span class="lbl"> Dark Mode</span></button>
-    <button class="btn" id="login" aria-label="Login"><span class="ic">⏻</span><span class="lbl"> Login</span></button>
-  </div>
-</nav>
+<section id="r2" class="page">
+  <button class="btn" data-go="home">&larr; Home</button><br><br>
+  <span class="tag">Round 02 // Final protocol</span>
+  <h2>THE <em>INEVITABLE</em></h2>
+  <p class="note">Turn a startup into an image, then convince the room it deserves to exist. Only <b>Google Gemini</b> is allowed. Submit the Brand Document, the Fest Stall image and the full prompt.</p>
+  <div class="hintbox"><b>Marks:</b> Brand Idea 25 · Identity &amp; Document 20 · Stall Visualization 30 · Accuracy 25</div>
+  <div class="card timer" data-timer="30"><span class="tag">Time remaining</span></div>
+  <div class="row"><button class="btn red" data-go="demo">Submission demonstration &rarr;</button>
+  <a class="btn" href="https://docs.google.com/forms/d/165JziQC52kJyCpHRTkfHkLZtmTyaWVDyIVv2mc6-wjI/edit?ts=6ac6228b" target="_blank" rel="noopener">Open submission form</a></div>
+</section>
 
-<main id="home">
-  <header class="hero">
-    <!-- HERO ART: vector artwork per theme. To use your own image, set HERO_IMG in the script. -->
-    <svg class="art art-light" viewBox="0 0 600 600" fill="none" stroke-width="2">
-      <defs>
-        <filter id="rglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
-        <radialGradient id="rcore"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#9bf1ff"/><stop offset="1" stop-color="#00a9d4" stop-opacity=".25"/></radialGradient>
-      </defs>
-      <g stroke="var(--acc)" stroke-width="2" class="spin slow"><line x1="562.0" y1="300.0" x2="578.0" y2="300.0"/><line x1="560.6" y1="327.4" x2="576.5" y2="329.1"/><line x1="556.3" y1="354.5" x2="571.9" y2="357.8"/><line x1="549.2" y1="381.0" x2="564.4" y2="385.9"/><line x1="539.3" y1="406.6" x2="554.0" y2="413.1"/><line x1="526.9" y1="431.0" x2="540.8" y2="439.0"/><line x1="512.0" y1="454.0" x2="524.9" y2="463.4"/><line x1="494.7" y1="475.3" x2="506.6" y2="486.0"/><line x1="475.3" y1="494.7" x2="486.0" y2="506.6"/><line x1="454.0" y1="512.0" x2="463.4" y2="524.9"/><line x1="431.0" y1="526.9" x2="439.0" y2="540.8"/><line x1="406.6" y1="539.3" x2="413.1" y2="554.0"/><line x1="381.0" y1="549.2" x2="385.9" y2="564.4"/><line x1="354.5" y1="556.3" x2="357.8" y2="571.9"/><line x1="327.4" y1="560.6" x2="329.1" y2="576.5"/><line x1="300.0" y1="562.0" x2="300.0" y2="578.0"/><line x1="272.6" y1="560.6" x2="270.9" y2="576.5"/><line x1="245.5" y1="556.3" x2="242.2" y2="571.9"/><line x1="219.0" y1="549.2" x2="214.1" y2="564.4"/><line x1="193.4" y1="539.3" x2="186.9" y2="554.0"/><line x1="169.0" y1="526.9" x2="161.0" y2="540.8"/><line x1="146.0" y1="512.0" x2="136.6" y2="524.9"/><line x1="124.7" y1="494.7" x2="114.0" y2="506.6"/><line x1="105.3" y1="475.3" x2="93.4" y2="486.0"/><line x1="88.0" y1="454.0" x2="75.1" y2="463.4"/><line x1="73.1" y1="431.0" x2="59.2" y2="439.0"/><line x1="60.7" y1="406.6" x2="46.0" y2="413.1"/><line x1="50.8" y1="381.0" x2="35.6" y2="385.9"/><line x1="43.7" y1="354.5" x2="28.1" y2="357.8"/><line x1="39.4" y1="327.4" x2="23.5" y2="329.1"/><line x1="38.0" y1="300.0" x2="22.0" y2="300.0"/><line x1="39.4" y1="272.6" x2="23.5" y2="270.9"/><line x1="43.7" y1="245.5" x2="28.1" y2="242.2"/><line x1="50.8" y1="219.0" x2="35.6" y2="214.1"/><line x1="60.7" y1="193.4" x2="46.0" y2="186.9"/><line x1="73.1" y1="169.0" x2="59.2" y2="161.0"/><line x1="88.0" y1="146.0" x2="75.1" y2="136.6"/><line x1="105.3" y1="124.7" x2="93.4" y2="114.0"/><line x1="124.7" y1="105.3" x2="114.0" y2="93.4"/><line x1="146.0" y1="88.0" x2="136.6" y2="75.1"/><line x1="169.0" y1="73.1" x2="161.0" y2="59.2"/><line x1="193.4" y1="60.7" x2="186.9" y2="46.0"/><line x1="219.0" y1="50.8" x2="214.1" y2="35.6"/><line x1="245.5" y1="43.7" x2="242.2" y2="28.1"/><line x1="272.6" y1="39.4" x2="270.9" y2="23.5"/><line x1="300.0" y1="38.0" x2="300.0" y2="22.0"/><line x1="327.4" y1="39.4" x2="329.1" y2="23.5"/><line x1="354.5" y1="43.7" x2="357.8" y2="28.1"/><line x1="381.0" y1="50.8" x2="385.9" y2="35.6"/><line x1="406.6" y1="60.7" x2="413.1" y2="46.0"/><line x1="431.0" y1="73.1" x2="439.0" y2="59.2"/><line x1="454.0" y1="88.0" x2="463.4" y2="75.1"/><line x1="475.3" y1="105.3" x2="486.0" y2="93.4"/><line x1="494.7" y1="124.7" x2="506.6" y2="114.0"/><line x1="512.0" y1="146.0" x2="524.9" y2="136.6"/><line x1="526.9" y1="169.0" x2="540.8" y2="161.0"/><line x1="539.3" y1="193.4" x2="554.0" y2="186.9"/><line x1="549.2" y1="219.0" x2="564.4" y2="214.1"/><line x1="556.3" y1="245.5" x2="571.9" y2="242.2"/><line x1="560.6" y1="272.6" x2="576.5" y2="270.9"/></g>
-      <circle cx="300" cy="300" r="250" stroke="var(--acc)" stroke-width="5"/>
-      <circle cx="300" cy="300" r="244" stroke="var(--acc)" stroke-opacity=".5"/>
-      <g fill="#00b4d8" fill-opacity=".22" stroke="#0090b3" stroke-width="2.5" class="spin r"><path d="M537.4 316.6A238 238 0 0 1 501.8 426.1L427.2 379.5A150 150 0 0 0 449.6 310.5Z"/><path d="M482.3 453.0A238 238 0 0 1 389.2 520.7L356.2 439.1A150 150 0 0 0 414.9 396.4Z"/><path d="M357.6 530.9A238 238 0 0 1 242.4 530.9L263.7 445.5A150 150 0 0 0 336.3 445.5Z"/><path d="M210.8 520.7A238 238 0 0 1 117.7 453.0L185.1 396.4A150 150 0 0 0 243.8 439.1Z"/><path d="M98.2 426.1A238 238 0 0 1 62.6 316.6L150.4 310.5A150 150 0 0 0 172.8 379.5Z"/><path d="M62.6 283.4A238 238 0 0 1 98.2 173.9L172.8 220.5A150 150 0 0 0 150.4 289.5Z"/><path d="M117.7 147.0A238 238 0 0 1 210.8 79.3L243.8 160.9A150 150 0 0 0 185.1 203.6Z"/><path d="M242.4 69.1A238 238 0 0 1 357.6 69.1L336.3 154.5A150 150 0 0 0 263.7 154.5Z"/><path d="M389.2 79.3A238 238 0 0 1 482.3 147.0L414.9 203.6A150 150 0 0 0 356.2 160.9Z"/><path d="M501.8 173.9A238 238 0 0 1 537.4 283.4L449.6 289.5A150 150 0 0 0 427.2 220.5Z"/></g>
-      <circle cx="300" cy="300" r="140" stroke="var(--acc)" stroke-width="9"/>
-      <circle cx="300" cy="300" r="124" stroke="#0090b3" stroke-width="2" stroke-dasharray="3 9"/>
-      <g class="tw"><polygon points="300.0,204.0 383.1,348.0 216.9,348.0" stroke="#00b4d8" stroke-width="9" filter="url(#rglow)" fill="#00b4d8" fill-opacity=".3"/></g>
-      <polygon points="300.0,204.0 383.1,348.0 216.9,348.0" stroke="#0090b3" stroke-width="3" fill="#00b4d8" fill-opacity=".14"/>
-      <polygon points="300.0,362.0 246.3,269.0 353.7,269.0" stroke="var(--red)" stroke-width="2" stroke-opacity=".7" class="spin r"/>
-      <g class="tw"><circle cx="300" cy="300" r="40" fill="#00d4ff" fill-opacity=".7" filter="url(#rglow)" stroke="none"/></g>
-      <circle cx="300" cy="300" r="30" fill="url(#rcore)" stroke="#0090b3" stroke-width="2.5"/>
-    </svg>
-    <svg class="art art-dark" viewBox="0 0 600 600" fill="none">
-      <defs>
-        <radialGradient id="halo"><stop offset=".3" stop-color="#000"/><stop offset=".48" stop-color="#22e07a" stop-opacity=".4"/><stop offset="1" stop-color="#22e07a" stop-opacity="0"/></radialGradient>
-        <linearGradient id="disk"><stop offset="0" stop-color="#e10600" stop-opacity="0"/><stop offset=".3" stop-color="#e10600"/><stop offset=".5" stop-color="#22e07a"/><stop offset=".7" stop-color="#e10600"/><stop offset="1" stop-color="#e10600" stop-opacity="0"/></linearGradient>
-        <filter id="bl"><feGaussianBlur stdDeviation="5"/></filter>
-      </defs>
-      <circle cx="300" cy="300" r="295" fill="url(#halo)"/>
-      <g transform="rotate(-16 300 300)"><ellipse cx="300" cy="300" rx="275" ry="66" stroke="url(#disk)" stroke-width="12" filter="url(#bl)"/><ellipse cx="300" cy="300" rx="275" ry="66" stroke="url(#disk)" stroke-width="2" stroke-dasharray="40 20" class="flow"/><ellipse cx="300" cy="300" rx="215" ry="48" stroke="#22e07a" stroke-opacity=".5" stroke-dasharray="6 12" class="flow"/></g>
-      <circle cx="300" cy="300" r="92" fill="#000" stroke="#22e07a" stroke-width="2"/>
-      <g fill="#e6f4ec"><circle class="tw" cx="60" cy="90" r="2"/><circle class="tw" cx="520" cy="70" r="1.5"/><circle class="tw" cx="560" cy="330" r="2"/><circle class="tw" cx="40" cy="400" r="1.5"/><circle class="tw" cx="130" cy="540" r="2"/><circle class="tw" cx="470" cy="520" r="1.5"/><circle class="tw" cx="300" cy="30" r="2"/></g>
-    </svg>
-    <img class="art" id="heroimg" alt="" hidden>
-    <span class="tag rv">// THE ULTIMATE STARTUP EVENT</span>
-    <h1 id="title" aria-label="STARC-UP"></h1>
-    <p class="rv">Where heroes are rebuilt and startups are forged. Two rounds. One inevitable outcome.</p>
-    <div class="rv"><button class="btn red big" onclick="document.getElementById('login').click()">Login to Enter</button></div>
-    <div class="hint rv">▼ SCROLL TO DEPLOY ▼</div>
-  </header>
-
-  <section class="c">
-    <div class="card rv" data-voice="round1">
-      <span class="tag">ROUND 01</span>
-      <h2>Unlock-17A</h2>
-      <p>Create an AI image based on the given theme.</p>
-      <div class="hintbox"><b>HINT:</b> Something related to superheroes — and someone turned it upside down.</div>
-    </div>
-    <div class="card rv" data-voice="round2">
-      <span class="tag">ROUND 02</span>
-      <h2>The Inevitable</h2>
-      <p>Create a startup as an image — and pitch it.</p>
-      <div class="hintbox"><b>HINT:</b>Figure it out yourself</div>
-    </div>
-  </section>
-
-  <section class="quote" data-voice="quote">
-    <blockquote class="rv" id="qt">“Sometimes you gotta run before you can walk.”</blockquote>
-    <cite class="rv" id="qc">— TONY STARK</cite>
-    <p class="rv" style="margin-top:24px;opacity:.8">That means don't fear the basics</p>
-  </section>
-  <footer>© STARC-UP · All systems nominal</footer>
-</main>
-
+<section id="demo" class="page">
+  <button class="btn" data-go="r2">&larr; Round 2</button><br><br>
+  <span class="tag">Demonstration // before you upload</span>
+  <h2>HOW TO <em>SUBMIT</em></h2>
+  <div class="dots" id="dots"></div>
+  <div id="stepbox"></div>
+  <div class="row"><button class="btn" id="prev">&larr; Back</button><button class="btn red" id="next">Next &rarr;</button></div>
+</section>
 
 <script>
-/* ===== CONFIG ===== */
-/* BUTTON CLICK SOUNDS: put file paths/URLs between the quotes (mp3/wav/ogg). Empty = silent. */
-const SOUNDS = {
-  clickLight: "",   // button click in LIGHT mode
-  clickDark:  ""    // button click in DARK mode
-};
-/* ===== JARVIS VOICE =====
-   One entry per button / section. Put your audio file in "src" (mp3/wav/ogg/m4a) - leave "" for no sound.
-   "text" is the caption shown on screen while the line plays (and the only thing shown when src is empty).
-   Set CAPTIONS=false to hide the caption bar completely. */
-const CAPTIONS = true;
-const VOICE = {
-  intro:      { src:"jarvis-intro.mp3", text:"Systems online. Welcome to STARC-UP. Two rounds. One inevitable outcome. Shall we begin? Log in to enter the portal." },  // after "Initialize" / intro video
-  voiceOn:    { src:"jarvis-online.mp3", text:"Jarvis online, here by I guide you through the website." },   // Voice button -> On
-  musicOn:    { src:"audio-restored.mp3", text:"Audio restored." },                                                   // Music button -> On
-  musicOff:   { src:"audio-muted.mp3", text:"Audio muted." },                                                      // Music button -> Off
-  themeDark:  { src:"switch-to-dark-mode.mp3", text:"Switching to dark mode. Welcome to the void." },                     // Theme button -> Dark
-  themeLight: { src:"switch-to-light-mode.mp3", text:"Switching to light mode. Power restored." },                         // Theme button -> Light
-  round1:     { src:"round-1.mp3", text:"Round one: Unlock-17A. Create an image with artificial intelligence. I suggest you look closer." },  // when Round 01 card scrolls into view
-  round2:     { src:"round2.mp3", text:"Round 2 - The Inevitable. Turn a startup into an image, then convince the room it deserves to exist.." },                              // when Round 02 card scrolls into view
+/* 3 DATA */
+const TOPICS=['A Man Without the Lifeline','Never Forget the Samurai Attitude','A Man With the Hammer','Who Had a Real Face','Crack the Craziest Thing With the 1 Pound','Everyone Watched, Nobody Helped','Her Happiest Photo Hid Everything','He Fed Everyone, Except Himself','Some Children Never Meet Childhood','One Click Exposed Everything'];
+const BRAND=[['Brand Name','your brand name'],['Tagline','one catchy line'],['Product / Service','detailed description'],['Problem Statement','ONE specific problem'],['Proposed Solution','how it solves the problem'],['Target Audience','who the brand is designed for'],['Unique Selling Proposition / Differentiation','how the brand stands out'],['Brand Concept & Story','overall idea and story behind the brand'],['Fest Presence / Stall Concept','how it appears at the college fest'],['Brand Identity','visual style, colours, design direction, tone']];
+const PROMPT_LINE='Give Me The Entire Prompt Typed Manually In This Chat As A One Time Copyable Text In One Go';
+const FEEDBACK='https://producttrialfeedback.geministudentambassador.com/'; // opens LAST
+const VOICE={home:'jarvis-intro.mp3',on:'jarvis-online.mp3',r1:'round-1.mp3',r2:'round2.mp3',dark:'switch-to-dark-mode.mp3',light:'switch-to-light-mode.mp3'};
+const $=s=>document.querySelector(s),root=document.documentElement;
+$('#topics').innerHTML=TOPICS.map(t=>`<li>${t}</li>`).join('');
 
-};
-/* YOUR OWN HERO IMAGES (optional). Empty = built-in vector artwork. */
-/* BACKGROUND MUSIC (loops). Add your own files; empty = soft built-in ambient pad. Set MUSIC_FALLBACK=false for silence. */
-const MUSIC = { light: "light.mp3", dark: "dark.m4a" };
-const MUSIC_FALLBACK = true;
-/* QUOTES per theme: [text, author] */
-const QUOTES = { light:["“Sometimes you gotta run before you can walk.”","— TONY STARK"], dark:["“Doom is no man's second choice.”","— DR. DOOM"] };
-const HERO_IMG = { light: "", dark: "" };
-function heroArt(){const q=QUOTES[root.dataset.theme];document.getElementById('qt').textContent=q[0];document.getElementById('qc').textContent=q[1];
-  const u=HERO_IMG[root.dataset.theme],im=document.getElementById('heroimg');
-  im.hidden=!u;if(u)im.src=u;
-  document.querySelectorAll('svg.art').forEach(e=>e.style.display=u?'none':'')}
-const root=document.documentElement,$=id=>document.getElementById(id);
-const theme=()=>root.dataset.theme;
-const cv=n=>getComputedStyle(root).getPropertyValue(n).trim();
-
-/* ---------- SOUND ---------- */
-function play(src,vol=1){if(!src)return;try{const a=new Audio(src);a.volume=vol;a.play().catch(()=>{})}catch(e){}}
-document.addEventListener('click',e=>{if(e.target.closest('.btn'))play(theme()==='dark'?SOUNDS.clickDark:SOUNDS.clickLight)});
-function entryVoice(){say('intro')}
-
-/* =====================================================================
-   THANOS-SNAP DUST  (order: 1 dust the old theme  ->  2 swap theme  ->  3 fade new theme in)
-   Performance: ONE page capture (not one per element), particles in typed arrays,
-   drawn into a half-resolution pixel buffer with a single putImageData per frame.
-   ===================================================================== */
-const SNAP_SEL=['nav .btn','.hero .tag','.hero .ltr','.hero p','.hero .btn.big','.hero .hint',
-  'section.c .card','.quote blockquote','.quote cite','.quote p','footer','#portal .bar','#portal .ins','#portal .big','#portal .card'].join(',');
-let snapping=false;
-
+/* 4 say(): JARVIS voice. Silent if Voice is Off or the file is missing */
+const voice=true;let au=null; // voice is always on
+function say(k){if(!voice||!VOICE[k])return;try{au&&au.pause();au=new Audio(VOICE[k]);au.play().catch(()=>{})}catch(e){}}
+/* theme: dark (green) <-> light (gold), swaps the background video */
+function setTheme(t){root.dataset.theme=t;$('#bgv').src=t=='dark'?'bg-dark.mp4':'bg-light.mp4';$('#bgv').play().catch(()=>{})}
+$('#ttog').onclick=()=>{if(snapping)return;const t=root.dataset.theme=='dark'?'light':'dark';say(t);snapSwap(()=>setTheme(t))};
+/* THEME DISINTEGRATION (from the main site): 1 the visible page is painted once to a canvas, 2 it crumbles into dust left -> right,
+   3 the theme swaps, 4 the new theme fades in. SNAP_SEL = what turns to dust (the top bar + every direct block of the open page). */
+const theme=()=>root.dataset.theme,cv=n=>getComputedStyle(root).getPropertyValue(n).trim();
+const SNAP_SEL='#hud>span,#hud .btn,.page.on>*';let snapping=false;
 /* Draws the visible elements (backgrounds, borders, words) onto one canvas - no external library */
 function paintViewport(els,vw,vh){
   const cvs=document.createElement('canvas');cvs.width=vw;cvs.height=vh;
@@ -390,127 +282,46 @@ async function snapSwap(change){
   })(t00);
 }
 
-/* Intro -> site: light version of the same dust (black screen crumbles left -> right) */
-function disint(colors,dur=1500){
-  const W=innerWidth,H=innerHeight,c=document.createElement('canvas');c.width=W;c.height=H;
-  c.style.cssText='position:fixed;inset:0;z-index:200;pointer-events:none';document.body.appendChild(c);
-  const x=c.getContext('2d'),n=9000,COL=24,px=new Float32Array(n),py=new Float32Array(n),pd=new Float32Array(n),
-        wx=new Float32Array(n),wy=new Float32Array(n),pc=new Uint8Array(n);
-  for(let i=0;i<n;i++){px[i]=Math.random()*W;py[i]=Math.random()*H;pd[i]=(px[i]/W)*.5+Math.random()*.2;
-    wx[i]=60+Math.random()*170;wy[i]=-(8+Math.random()*100);pc[i]=Math.random()*colors.length|0}
-  const t0=performance.now();
-  (function f(nw){const t=(nw-t0)/dur;x.clearRect(0,0,W,H);if(t>1.3){c.remove();return}
-    x.fillStyle='#000';
-    for(let cx=0;cx<W;cx+=COL){const u=(t-(cx/W)*.5)/.2;if(u>=1)continue;x.globalAlpha=u<=0?1:1-u;x.fillRect(cx,0,COL+1,H)}
-    for(let k=0;k<colors.length;k++){x.fillStyle=colors[k];
-      for(let i=0;i<n;i++){if(pc[i]!==k)continue;const l=(t-pd[i])/.55;if(l<=0||l>=1)continue;
-        x.globalAlpha=(1-l)*(1-l);const e=l*Math.pow(l,.3);x.fillRect(px[i]+wx[i]*e,py[i]+wy[i]*e,2,2)}}
-    requestAnimationFrame(f)})(t0);
+
+
+/* 5 go(page): cinematic transition */
+const TITLES={home:['ACCESS GRANTED','STARC-UP'],r1:['ACCESS GRANTED // ROUND 01','UNLOCK 17-A'],r2:['ACCESS GRANTED // ROUND 02','THE INEVITABLE'],demo:['PROTOCOL','SUBMISSION']};
+let busy=false;
+function go(id){
+  if(busy||$('#'+id).classList.contains('on'))return;busy=true;
+  $('#cutL').textContent=TITLES[id][0];$('#cutT').textContent=TITLES[id][1];
+  $('#cut').classList.add('shut');
+  setTimeout(()=>{document.querySelectorAll('.page.on').forEach(p=>p.classList.remove('on'));$('#'+id).classList.add('on');scrollTo(0,0);if(id=='demo')draw();say(id)},1100);
+  setTimeout(()=>{$('#cut').classList.remove('shut');busy=false;if(id=='r1'||id=='r2')startTimer(id)},2300); // timer starts as the round appears
 }
+document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g)go(g.dataset.go)});
 
-/* ---------- BACKGROUND MUSIC ---------- */
-let musicOn=true,pac,pg,pos=[];
-const mus=new Audio();mus.loop=true;mus.volume=.4;
-function startPad(){try{pac=pac||new (window.AudioContext||window.webkitAudioContext)();pac.resume();
-  const dark=theme()==='dark',notes=dark?[55,82.4,110,164.8]:[110,164.8,220,261.6,329.6],t=pac.currentTime;
-  pg=pac.createGain();pg.gain.setValueAtTime(0,t);pg.gain.linearRampToValueAtTime(.12,t+3);
-  const f=pac.createBiquadFilter();f.type='lowpass';f.frequency.value=dark?500:1200;
-  const lfo=pac.createOscillator(),lg=pac.createGain();lfo.frequency.value=.15;lg.gain.value=dark?200:500;lfo.connect(lg).connect(f.frequency);lfo.start();pos=[lfo];
-  notes.forEach((n,i)=>{const o=pac.createOscillator(),g=pac.createGain();o.type=dark?'sine':'triangle';o.frequency.value=n;o.detune.value=i%2?6:-6;g.gain.value=1/notes.length;o.connect(g).connect(f);o.start();pos.push(o)});
-  f.connect(pg).connect(pac.destination)}catch(e){}}
-function stopPad(){if(!pg)return;const g=pg,o=pos,t=pac.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+.6);setTimeout(()=>o.forEach(x=>{try{x.stop()}catch(e){}}),700);pg=null}
-function musicSync(){
-  if(!started)return;stopPad();mus.pause();if(!musicOn)return;
-  const src=MUSIC[theme()];
-  if(src){if(mus.getAttribute('src')!==src)mus.src=src;mus.play().catch(()=>{})}
-  else if(MUSIC_FALLBACK)startPad();
-}
-$('music').onclick=()=>{musicOn=!musicOn;$('music').classList.toggle('off',!musicOn);
-  $('music').querySelector('.lbl').textContent=musicOn?' Music: On':' Music: Off';musicSync();say(musicOn?'musicOn':'musicOff')};
-function setThemeBtn(t){$('theme').querySelector('.ic').textContent=t==='dark'?'☀':'☾';
-  $('theme').querySelector('.lbl').textContent=t==='dark'?' Light Mode':' Dark Mode';
-  $('tc').content=cv('--bg')}
-/* match colours to the live background video (needs same-origin/CORS-enabled video; otherwise defaults are used) */
-const sc=document.createElement('canvas');sc.width=sc.height=8;
-setInterval(()=>{const v=$(theme()==='dark'?'v3':'v2');if(!v.classList.contains('on')||v.readyState<2||v.paused)return;
-  try{const x=sc.getContext('2d',{willReadFrequently:true});x.drawImage(v,0,0,8,8);const d=x.getImageData(0,0,8,8).data;let r=0,g=0,b=0;
-    for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2]}
-    root.style.setProperty('--vid',`${r/64|0},${g/64|0},${b/64|0}`)}catch(e){}},1500);
+/* 6 Timer: FIXED 30:00, no controls. It starts by itself when the round page opens (the click on the round card) and keeps running
+   even if you move between pages. The end time is kept in sessionStorage, so a refresh does not restart it (closing the tab does). */
+const DUR=30*60;
+document.querySelectorAll('.timer').forEach(box=>{
+  box.insertAdjacentHTML('beforeend','<div class="ring"><svg viewBox="0 0 200 200"><circle class="bg" cx="100" cy="100" r="88"/><circle class="fg" cx="100" cy="100" r="88"/></svg><div class="core">30:00</div></div><p class="note" style="text-align:center;margin:0 auto">30-minute timer · starts automatically when this round opens</p>');
+  const id=box.closest('.page').id,ring=box.querySelector('.ring'),fg=box.querySelector('.fg'),core=box.querySelector('.core');let iv=null,beeped=false;
+  const beep=()=>{try{const a=new AudioContext(),o=a.createOscillator();o.connect(a.destination);o.frequency.value=880;o.start();setTimeout(()=>{o.stop();a.close()},900)}catch(e){}};
+  const tick=()=>{const end=+sessionStorage['end_'+id]||0,left=end?Math.max(0,Math.ceil((end-Date.now())/1000)):DUR,m=Math.floor(left/60),s=left%60;
+    core.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');fg.style.strokeDashoffset=553*(1-left/DUR);ring.classList.toggle('low',left>0&&left<=60);
+    if(end&&left<=0){clearInterval(iv);if(!beeped){beeped=true;beep()}}};
+  box.run=()=>{if(!sessionStorage['end_'+id])sessionStorage['end_'+id]=Date.now()+DUR*1000;clearInterval(iv);iv=setInterval(tick,500);tick()};
+  if(sessionStorage['end_'+id])box.run();else tick();
+});
+const startTimer=id=>{const b=document.querySelector('#'+id+' .timer');b&&b.run()};
 
-/* ---------- THEME ---------- */
-let started=false;
-function syncBg(){
-  const act=theme()==='dark'?$('v3'):$('v2'),oth=act===$('v2')?$('v3'):$('v2');
-  root.style.removeProperty('--vid');oth.classList.remove('on');oth.pause();
-  const has=!!act.getAttribute('src');
-  act.classList.toggle('on',has);
-  if(has&&started)act.play().catch(()=>{});
-  $('bgfx').style.display=has?'none':'block';heroArt();
-}
-$('theme').onclick=()=>{
-  if(snapping)return;
-  say(theme()==='light'?'themeDark':'themeLight');
-  snapSwap(()=>{
-    const t=theme()==='light'?'dark':'light';
-    root.dataset.theme=t;
-    setThemeBtn(t);
-    syncBg();musicSync();
-  });
-};
-syncBg();
-
-/* ---------- JARVIS VOICE ENGINE ---------- */
-let voiceOn=true,speaking=false,cur=null,capT=0;
-function endVoice(){clearTimeout(capT);if(cur){cur.onended=cur.onerror=null;cur.pause();cur=null}
-  speaking=false;$('jarvis').classList.remove('show');mus.volume=.4}
-/* say('key') interrupts whatever is playing. say('key',true) only speaks if nothing else is being said. Returns true if it spoke. */
-function say(key,soft){
-  if(!voiceOn||!started)return false;
-  const L=VOICE[key];if(!L||(soft&&speaking))return false;
-  endVoice();speaking=true;mus.volume=.15;
-  if(CAPTIONS&&L.text){$('jt').textContent=L.text;$('jarvis').classList.add('show')}
-  const timer=()=>{capT=setTimeout(endVoice,Math.max(2600,(L.text||'').length*65))};
-  if(L.src){const a=new Audio(L.src);cur=a;a.onended=endVoice;a.onerror=()=>{cur=null;timer()};a.play().catch(()=>{cur=null;timer()})}
-  else timer();
-  return true;
-}
-$('voice').onclick=()=>{voiceOn=!voiceOn;$('voice').classList.toggle('off',!voiceOn);
-  $('voice').querySelector('.lbl').textContent=voiceOn?' Voice: On':' Voice: Off';
-  if(voiceOn)say('voiceOn');else endVoice()};
-/* section lines: each plays once, the first time it is in the middle of the screen (and nothing else is speaking) */
-const heard=new Set();
-setInterval(()=>{if(!started||!voiceOn||speaking||snapping)return;
-  for(const el of document.querySelectorAll('[data-voice]')){const k=el.dataset.voice;if(heard.has(k))continue;
-    const r=el.getBoundingClientRect();
-    if(r.top<innerHeight*.65&&r.bottom>innerHeight*.35&&say(k,true)){heard.add(k);break}}},700);
-
-/* ---------- ENTRY ANIMATION ---------- */
-const title=$('title');
-'STARC-UP'.split('').forEach((ch,i)=>{const s=document.createElement('span');s.className='ltr';s.textContent=ch;
-  s.style.cssText=`--i:${i};--x:${(Math.random()-.5)*900}px;--y:${(Math.random()-.5)*700}px;--r:${(Math.random()-.5)*180}deg`;title.appendChild(s)});
-function closeIntro(){
-  if(started)return;started=true;
-  const v1=$('v1');v1.pause();
-  disint(['#000','#000','#000',cv('--acc'),cv('--red')],1700);
-  $('intro').style.display='none';
-  syncBg();
-  $('wave').classList.add('go');
-  entryVoice();musicSync();
-  title.classList.add('go');
-  document.querySelectorAll('.hero .rv').forEach((el,i)=>{el.style.transitionDelay=(.9+i*.18)+'s';el.classList.add('in')});
-}
-$('enter').onclick=()=>{
-  $('gate').style.display='none';const v1=$('v1');
-  if(v1.getAttribute('src')){v1.muted=false;v1.play().catch(closeIntro);$('skip').style.display='block';v1.onended=closeIntro}
-  else setTimeout(closeIntro,300)
-};
-$('skip').onclick=closeIntro;
-
-/* ---------- SCROLL REVEAL ---------- */
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.15});
-document.querySelectorAll('.rv:not(.hero .rv)').forEach((el,i)=>{el.style.transitionDelay=(i%3)*.12+'s';io.observe(el)});
-
+/* 7 Demo: 3-step stepper */
+let st=0;
+const STEPS=[
+ ()=>`<span class="tag">Step 1 of 3</span><h3>Brand Document</h3><p class="note">It must contain these 10 sections, in this order:</p><ol>${BRAND.map(b=>`<li><b>${b[0]}</b><br><small>[${b[1]}]</small></li>`).join('')}</ol><div class="row"><button class="btn" onclick="dl()">&darr; Download template</button></div>`,
+ ()=>`<span class="tag">Step 2 of 3</span><h3>Fest / Stall Visual Image</h3><p class="note">Generate ONE image of how your brand looks at the college fest: stall front, branding, colours, crowd. Keep it as an image file and upload it with the form.</p>`,
+ ()=>`<span class="tag">Step 3 of 3</span><h3>Prompt (the entire prompt)</h3><p class="note">Paste this line in the Gemini chat where you made the image:</p><code class="code">${PROMPT_LINE}</code><div class="row"><button class="btn red" onclick="cp()">&#10697; Copy line</button></div><p class="note">Gemini replies with your whole prompt as one copyable block. Copy that block into the form. After uploading, open the feedback survey.</p>`];
+function draw(){$('#stepbox').innerHTML='<div class="step">'+STEPS[st]()+'</div>';$('#dots').innerHTML=STEPS.map((_,i)=>`<i class="${i<=st?'on':''}"></i>`).join('');$('#prev').style.visibility=st?'visible':'hidden';$('#next').textContent=st<2?'Next \u2192':'Open feedback survey \u2197'}
+$('#prev').onclick=()=>{st=Math.max(0,st-1);draw()};
+$('#next').onclick=()=>{if(st<2){st++;draw()}else open(FEEDBACK,'_blank','noopener')};
+function cp(){navigator.clipboard.writeText(PROMPT_LINE).then(()=>alert('Copied!')).catch(()=>prompt('Copy this line:',PROMPT_LINE))}
+function dl(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['BRAND DOCUMENT\n\n'+BRAND.map((b,i)=>`${i+1}. ${b[0]}\n[${b[1]}]\n`).join('\n')],{type:'text/plain'}));a.download='brand-document-template.txt';a.click()}
 </script>
-<script src="portal.js"></script>
 </body>
 </html>
